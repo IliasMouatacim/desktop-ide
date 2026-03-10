@@ -143,30 +143,69 @@ export default function App() {
 
 function ActivityBar({ section, onSectionChange, onToggleGit }) {
   const items = [
-    { id: 'files', icon: '📁', label: 'Explorer' },
-    { id: 'search', icon: '🔍', label: 'Search' },
-    { id: 'git', icon: '⑂', label: 'Source Control', onClick: onToggleGit },
-    { id: 'extensions', icon: '⧉', label: 'Extensions' },
+    {
+      id: 'files',
+      label: 'Explorer',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+        </svg>
+      ),
+    },
+    {
+      id: 'search',
+      label: 'Search',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+      ),
+    },
+    {
+      id: 'git',
+      label: 'Source Control',
+      onClick: onToggleGit,
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 012 2v7M6 9v12"/>
+        </svg>
+      ),
+    },
+    {
+      id: 'extensions',
+      label: 'Extensions',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+        </svg>
+      ),
+    },
   ];
 
   return (
-    <div className="w-12 bg-ide-sidebar flex flex-col items-center py-2 border-r border-ide-border">
-      {items.map(item => (
-        <button
-          key={item.id}
-          onClick={() => {
-            if (item.onClick) item.onClick();
-            onSectionChange(item.id);
-          }}
-          className={`w-10 h-10 flex items-center justify-center text-lg mb-1 rounded transition-colors
-            ${section === item.id
-              ? 'text-ide-accent bg-ide-bg/50 border-l-2 border-ide-accent'
-              : 'text-ide-textMuted hover:text-ide-text'}`}
-          title={item.label}
-        >
-          {item.icon}
-        </button>
-      ))}
+    <div className="w-12 bg-ide-sidebar flex flex-col items-center pt-2 border-r border-ide-border shrink-0">
+      {items.map(item => {
+        const isActive = section === item.id;
+        return (
+          <button
+            key={item.id}
+            onClick={() => {
+              if (item.onClick) item.onClick();
+              onSectionChange(item.id);
+            }}
+            className={`relative w-10 h-10 flex items-center justify-center mb-0.5 rounded-md transition-all
+              ${isActive
+                ? 'text-ide-accent'
+                : 'text-ide-textSubtle hover:text-ide-textMuted'}`}
+            title={item.label}
+          >
+            {isActive && (
+              <span className="absolute left-0 top-1/2 -translate-y-1/2 w-[2px] h-5 bg-ide-accent rounded-r" />
+            )}
+            {item.icon}
+          </button>
+        );
+      })}
     </div>
   );
 }

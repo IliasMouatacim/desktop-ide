@@ -167,18 +167,25 @@ export default function Terminal() {
 
   return (
     <div className="h-full flex flex-col bg-ide-panel">
-      <div className="flex items-center justify-between px-3 py-1 border-b border-ide-border shrink-0">
+      <div className="flex items-center justify-between px-3 py-1.5 border-b border-ide-border shrink-0">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-ide-textMuted uppercase tracking-wider">Terminal</span>
-          <span className="text-[10px] px-1.5 py-0.5 bg-ide-bg rounded text-ide-textMuted">bash</span>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-ide-textMuted">
+            <path d="M4 17l6-5-6-5M12 19h8"/>
+          </svg>
+          <span className="text-[11px] font-semibold text-ide-textMuted uppercase tracking-widest">Terminal</span>
+          <span className="text-[10px] px-1.5 py-[1px] bg-ide-bg/80 rounded-md text-ide-textSubtle font-medium">bash</span>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           <button
             onClick={connect}
-            className="text-ide-textMuted hover:text-ide-text text-xs p-1 rounded hover:bg-ide-bg/50"
+            className="text-ide-textMuted hover:text-ide-text p-1 rounded-md hover:bg-ide-bg/50 transition-colors"
             title="New Terminal"
           >
-            +
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14M5 12h14"/>
+            </svg>
           </button>
         </div>
       </div>

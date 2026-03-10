@@ -32,8 +32,8 @@ export default function AuthModal({ onLogin, onRegister, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-ide-sidebar border border-ide-border rounded-xl shadow-2xl w-full max-w-md p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-ide-sidebar border border-ide-border rounded-xl shadow-float w-full max-w-md p-6 animate-slideUp">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-ide-text">
@@ -41,9 +41,11 @@ export default function AuthModal({ onLogin, onRegister, onClose }) {
           </h2>
           <button
             onClick={onClose}
-            className="text-ide-textMuted hover:text-ide-error text-xl transition-colors"
+            className="p-1 text-ide-textMuted hover:text-ide-error rounded-md hover:bg-ide-error/10 transition-colors"
           >
-            ✕
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M18 6L6 18M6 6l12 12"/>
+            </svg>
           </button>
         </div>
 
