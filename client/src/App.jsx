@@ -25,6 +25,108 @@ export default function App() {
     setShowPreview(true);
   }, []);
 
+  /* ── Read a single file handle into text ────────────────────────── */
+  const readFileHandle = async (handle, basePath = '') => {
+    const file = await handle.getFile();
+    const text = await file.text();
+    const path = basePath ? `${basePath}/${file.name}` : file.name;
+    return { path, text };
+  };
+
+  /* ── Recursively read a directory handle ────────────────────────── */
+  const readDirHandle = async (dirHandle, basePath = '') => {
+    const result = {};
+    for await (const [name, handle] of dirHandle.entries()) {
+      // skip hidden / system folders
+      if (name.startsWith('.') || name === 'node_modules') continue;
+      const entryPath = basePath ? `${basePath}/${name}` : name;
+      if (handle.kind === 'file') {
+        try {
+          const file = await handle.getFile();
+          // skip files > 1 MB to avoid locking the browser
+          if (file.size > 1_048_576) continue;
+          result[entryPath] = await file.text();
+        } catch { /* skip unreadable */ }
+      } else {
+        const sub = await readDirHandle(handle, entryPath);
+        Object.assign(result, sub);
+      }
+    }
+    return result;
+  };
+
+  /* ── Open File (modern API → fallback to <input>) ───────────────── */
+  const handleOpenFile = useCallback(async () => {
+    try {
+      if (window.showOpenFilePicker) {
+        const [handle] = await window.showOpenFilePicker({
+          multiple: false,
+        });
+        const { path, text } = await readFileHandle(handle);
+        fs.loadFiles({ [path]: text });
+      } else {
+        // fallback for browsers without File System Access API
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.onchange = async () => {
+          const file = input.files[0];
+          if (!file) return;
+          const text = await file.text();
+          fs.loadFiles({ [file.name]: text });
+        };
+        input.click();
+      }
+    } catch (e) {
+      // user cancelled the picker — ignore
+      if (e.name !== 'AbortError') console.error(e);
+    }
+  }, [fs]);
+
+  /* ── Open Folder ────────────────────────────────────────────────── */
+  const handleOpenFolder = useCallback(async () => {
+    try {
+      if (window.showDirectoryPicker) {
+        const dirHandle = await window.showDirectoryPicker();
+        const files = await readDirHandle(dirHandle);
+        if (Object.keys(files).length > 0) {
+          fs.loadFiles(files, dirHandle.name);
+        }
+      } else {
+        // fallback: use <input webkitdirectory>
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.webkitdirectory = true;
+        input.onchange = async () => {
+          const result = {};
+          for (const file of input.files) {
+            // webkitRelativePath gives "folder/subfolder/file.txt"
+            const path = file.webkitRelativePath || file.name;
+            // strip the top-level folder prefix
+            const parts = path.split('/');
+            const folderName = parts[0];
+            const relative = parts.slice(1).join('/') || file.name;
+            if (file.size <= 1_048_576) {
+              result[relative] = await file.text();
+            }
+            // use the root folder name as project name
+            if (!input._folderName) input._folderName = folderName;
+          }
+          if (Object.keys(result).length > 0) {
+            fs.loadFiles(result, input._folderName);
+          }
+        };
+        input.click();
+      }
+    } catch (e) {
+      if (e.name !== 'AbortError') console.error(e);
+    }
+  }, [fs]);
+
+  /* ── Save current file ──────────────────────────────────────────── */
+  const handleSave = useCallback(() => {
+    if (fs.activeFile) fs.saveFile(fs.activeFile);
+  }, [fs]);
+
   return (
     <div className="h-full flex flex-col bg-ide-bg">
       {/* Titlebar */}
@@ -39,6 +141,9 @@ export default function App() {
         showTerminal={showTerminal}
         projectName={fs.projectName}
         onProjectNameChange={fs.setProjectName}
+        onOpenFile={handleOpenFile}
+        onOpenFolder={handleOpenFolder}
+        onSave={handleSave}
       />
 
       {/* Main content */}

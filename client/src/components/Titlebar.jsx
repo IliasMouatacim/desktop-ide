@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 
 /* ── SVG micro-icons (16 × 16, stroke-based) ─────────────────────── */
 const Icon = ({ d, size = 16, className = '' }) => (
@@ -16,11 +16,16 @@ const icons = {
   user:     'M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 3a4 4 0 100 8 4 4 0 000-8z',
   logOut:   'M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9',
   cloud:    'M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z',
+  file:     'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6',
+  folder:   'M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z',
+  save:     'M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2zM17 21v-8H7v8M7 3v5h8',
+  download: 'M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3',
 };
 
 export default function Titlebar({
   user, onLogin, onLogout, onTogglePreview, onToggleTerminal, onRun,
-  showPreview, showTerminal, projectName, onProjectNameChange
+  showPreview, showTerminal, projectName, onProjectNameChange,
+  onOpenFile, onOpenFolder, onSave
 }) {
   return (
     <div className="h-11 bg-ide-sidebar flex items-center px-3 border-b border-ide-border select-none shrink-0">
@@ -36,7 +41,7 @@ export default function Titlebar({
 
       {/* Menu items */}
       <div className="flex items-center gap-0.5 text-xs text-ide-textMuted">
-        <MenuButton label="File" />
+        <FileMenu onOpenFile={onOpenFile} onOpenFolder={onOpenFolder} onSave={onSave} />
         <MenuButton label="Edit" />
         <MenuButton label="View" />
         <MenuButton label="Run" />
@@ -109,6 +114,67 @@ export default function Titlebar({
           </button>
         )}
       </div>
+    </div>
+  );
+}
+
+/* ── File menu with dropdown ──────────────────────────────────────── */
+function FileMenu({ onOpenFile, onOpenFolder, onSave }) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const items = [
+    { label: 'Open File…', icon: icons.file, shortcut: 'Ctrl+O', action: onOpenFile },
+    { label: 'Open Folder…', icon: icons.folder, shortcut: 'Ctrl+Shift+O', action: onOpenFolder },
+    { type: 'separator' },
+    { label: 'Save', icon: icons.save, shortcut: 'Ctrl+S', action: onSave },
+    { label: 'Download Project', icon: icons.download, shortcut: '', action: null },
+  ];
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        onClick={() => setOpen(o => !o)}
+        className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors
+          ${open ? 'bg-ide-bg/60 text-ide-text' : 'hover:bg-ide-bg/40 hover:text-ide-text'}`}
+      >
+        File
+      </button>
+      {open && (
+        <div className="absolute left-0 top-full mt-0.5 w-56 bg-ide-panel border border-ide-border rounded-lg
+                        shadow-float z-50 py-1 animate-fadeIn">
+          {items.map((item, i) =>
+            item.type === 'separator' ? (
+              <div key={i} className="h-px bg-ide-border my-1 mx-2" />
+            ) : (
+              <button
+                key={item.label}
+                onClick={() => {
+                  setOpen(false);
+                  item.action?.();
+                }}
+                className="w-full flex items-center gap-2.5 px-3 py-1.5 text-xs text-ide-text
+                           hover:bg-ide-accent/10 hover:text-ide-accent transition-colors"
+              >
+                <Icon d={item.icon} size={14} className="text-ide-textMuted" />
+                <span className="flex-1 text-left">{item.label}</span>
+                {item.shortcut && (
+                  <span className="text-[10px] text-ide-textSubtle font-mono">{item.shortcut}</span>
+                )}
+              </button>
+            )
+          )}
+        </div>
+      )}
     </div>
   );
 }

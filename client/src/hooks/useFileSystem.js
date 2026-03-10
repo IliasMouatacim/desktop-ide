@@ -145,11 +145,23 @@ export function useFileSystem() {
     setModifiedFiles(new Set());
   }, []);
 
+  const loadFiles = useCallback((newFiles, name) => {
+    setFiles(prev => ({ ...prev, ...newFiles }));
+    Object.assign(savedContents.current, newFiles);
+    const paths = Object.keys(newFiles);
+    if (paths.length > 0) {
+      const first = paths[0];
+      setOpenFiles(prev => prev.includes(first) ? prev : [...prev, first]);
+      setActiveFile(first);
+    }
+    if (name) setProjectName(name);
+  }, []);
+
   return {
     files, openFiles, activeFile, modifiedFiles, projectName, cursorPosition,
     setProjectName, setCursorPosition,
     openFile, closeFile, createFile, createFolder, deleteFile, renameFile,
-    updateFile, saveFile, getFileContent, loadTemplate
+    updateFile, saveFile, getFileContent, loadTemplate, loadFiles
   };
 }
 
