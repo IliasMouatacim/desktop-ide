@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 
 const DEFAULT_FILES = {
   'index.html': '<!DOCTYPE html>\n<html lang="en">\n<head>\n  <meta charset="UTF-8">\n  <meta name="viewport" content="width=device-width, initial-scale=1.0">\n  <title>My Project</title>\n  <link rel="stylesheet" href="style.css">\n</head>\n<body>\n  <div class="container">\n    <h1>Welcome to Cloud IDE</h1>\n    <p>Start editing to see changes in the live preview!</p>\n    <button id="counter-btn">Click me: 0</button>\n  </div>\n  <script src="script.js"></script>\n</body>\n</html>',
@@ -27,13 +27,36 @@ const TEMPLATES = {
 };
 
 export function useFileSystem() {
-  const [files, setFiles] = useState(DEFAULT_FILES);
-  const [openFiles, setOpenFiles] = useState(['index.html']);
-  const [activeFile, setActiveFile] = useState('index.html');
+  const [files, setFiles] = useState(() => {
+    const saved = localStorage.getItem('ide_files');
+    return saved ? JSON.parse(saved) : DEFAULT_FILES;
+  });
+  const [openFiles, setOpenFiles] = useState(() => {
+    const saved = localStorage.getItem('ide_openFiles');
+    return saved ? JSON.parse(saved) : ['index.html'];
+  });
+  const [activeFile, setActiveFile] = useState(() => {
+    return localStorage.getItem('ide_activeFile') || 'index.html';
+  });
+  const [projectName, setProjectName] = useState(() => {
+    return localStorage.getItem('ide_projectName') || 'my-project';
+  });
+
   const [modifiedFiles, setModifiedFiles] = useState(new Set());
-  const [projectName, setProjectName] = useState('my-project');
   const [cursorPosition, setCursorPosition] = useState({ line: 1, col: 1 });
-  const savedContents = useRef({ ...DEFAULT_FILES });
+  const savedContents = useRef(files); // Initialize with `files` which might be from localStorage
+
+  // Save to localStorage when things change
+  useEffect(() => {
+    localStorage.setItem('ide_files', JSON.stringify(files));
+    localStorage.setItem('ide_openFiles', JSON.stringify(openFiles));
+    if (activeFile) {
+      localStorage.setItem('ide_activeFile', activeFile);
+    } else {
+      localStorage.removeItem('ide_activeFile');
+    }
+    localStorage.setItem('ide_projectName', projectName);
+  }, [files, openFiles, activeFile, projectName]);
 
   const openFile = useCallback((path) => {
     if (!files[path] && files[path] !== '') return;

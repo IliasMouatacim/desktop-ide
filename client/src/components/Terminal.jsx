@@ -78,8 +78,14 @@ export default function Terminal() {
     }
 
     // Connect to WebSocket (local dev / self-hosted server)
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws?type=terminal`;
+    let wsUrl = '';
+    if (import.meta.env.VITE_API_URL) {
+      // Convert http:// to ws:// and https:// to wss://
+      wsUrl = import.meta.env.VITE_API_URL.replace(/^http/, 'ws') + '/ws?type=terminal';
+    } else {
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      wsUrl = `${protocol}//${window.location.host}/ws?type=terminal`;
+    }
 
     try {
       const ws = new WebSocket(wsUrl);
@@ -147,7 +153,7 @@ export default function Terminal() {
 
     const handleResize = () => {
       if (fitAddonRef.current) {
-        try { fitAddonRef.current.fit(); } catch {}
+        try { fitAddonRef.current.fit(); } catch { }
       }
     };
 
@@ -170,8 +176,8 @@ export default function Terminal() {
       <div className="flex items-center justify-between px-3 py-1.5 border-b border-ide-border shrink-0">
         <div className="flex items-center gap-2">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-               strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-ide-textMuted">
-            <path d="M4 17l6-5-6-5M12 19h8"/>
+            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-ide-textMuted">
+            <path d="M4 17l6-5-6-5M12 19h8" />
           </svg>
           <span className="text-[11px] font-semibold text-ide-textMuted uppercase tracking-widest">Terminal</span>
           <span className="text-[10px] px-1.5 py-[1px] bg-ide-bg/80 rounded-md text-ide-textSubtle font-medium">bash</span>
@@ -183,8 +189,8 @@ export default function Terminal() {
             title="New Terminal"
           >
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                 strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M12 5v14M5 12h14"/>
+              strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14M5 12h14" />
             </svg>
           </button>
         </div>

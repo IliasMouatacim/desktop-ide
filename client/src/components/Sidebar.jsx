@@ -3,28 +3,28 @@ import React, { useState, useMemo } from 'react';
 /* ── SVG micro-icons ─────────────────────────────────────────────── */
 const Ico = ({ d, size = 14, color = 'currentColor', className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color}
-       strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 ${className}`}>
+    strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className={`shrink-0 ${className}`}>
     <path d={d} />
   </svg>
 );
 
 const FILE_ICON_MAP = {
   html: { c: '#e34c26', d: 'M4 4h16v16H4zM8 8h8M8 12h8M8 16h4' },
-  htm:  { c: '#e34c26', d: 'M4 4h16v16H4zM8 8h8M8 12h8M8 16h4' },
-  css:  { c: '#42a5f5', d: 'M4 4h16v16H4zM8 8h8M8 12h5M8 16h8' },
+  htm: { c: '#e34c26', d: 'M4 4h16v16H4zM8 8h8M8 12h8M8 16h4' },
+  css: { c: '#42a5f5', d: 'M4 4h16v16H4zM8 8h8M8 12h5M8 16h8' },
   scss: { c: '#c76494', d: 'M4 4h16v16H4zM8 8h8M8 12h5M8 16h8' },
-  js:   { c: '#f7df1e', d: 'M4 4h16v16H4zM10 8v8M14 8v4c0 2-4 2-4 0' },
-  jsx:  { c: '#61dafb', d: 'M12 12m-2 0a2 2 0 104 0 2 2 0 10-4 0M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10' },
-  ts:   { c: '#3178c6', d: 'M4 4h16v16H4zM9 8h6M12 8v8' },
-  tsx:  { c: '#61dafb', d: 'M12 12m-2 0a2 2 0 104 0 2 2 0 10-4 0M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10' },
+  js: { c: '#f7df1e', d: 'M4 4h16v16H4zM10 8v8M14 8v4c0 2-4 2-4 0' },
+  jsx: { c: '#61dafb', d: 'M12 12m-2 0a2 2 0 104 0 2 2 0 10-4 0M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10' },
+  ts: { c: '#3178c6', d: 'M4 4h16v16H4zM9 8h6M12 8v8' },
+  tsx: { c: '#61dafb', d: 'M12 12m-2 0a2 2 0 104 0 2 2 0 10-4 0M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10' },
   json: { c: '#f9e2af', d: 'M8 3H5a2 2 0 00-2 2v3M16 3h3a2 2 0 012 2v3M21 16v3a2 2 0 01-2 2h-3M8 21H5a2 2 0 01-2-2v-3' },
-  md:   { c: '#6c7086', d: 'M4 4h16v16H4zM7 15V9l3 3 3-3v6M17 9v6' },
-  py:   { c: '#3776ab', d: 'M12 2C6.5 2 6 4.5 6 4.5V8h6v1H5s-3-.5-3 4 2.5 4 2.5 4H7v-3s-.2-2.5 2.5-2.5h5s2.3.1 2.3-2.3V4.5S17.5 2 12 2z' },
+  md: { c: '#6c7086', d: 'M4 4h16v16H4zM7 15V9l3 3 3-3v6M17 9v6' },
+  py: { c: '#3776ab', d: 'M12 2C6.5 2 6 4.5 6 4.5V8h6v1H5s-3-.5-3 4 2.5 4 2.5 4H7v-3s-.2-2.5 2.5-2.5h5s2.3.1 2.3-2.3V4.5S17.5 2 12 2z' },
   java: { c: '#f89820', d: 'M4 4h16v16H4zM9 8h6M12 8v8' },
-  svg:  { c: '#cba6f7', d: 'M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2' },
-  png:  { c: '#cba6f7', d: 'M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2zM8.5 10a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM21 15l-5-5L5 21' },
-  env:  { c: '#a6e3a1', d: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' },
-  yml:  { c: '#f38ba8', d: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6' },
+  svg: { c: '#cba6f7', d: 'M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2' },
+  png: { c: '#cba6f7', d: 'M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2zM8.5 10a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM21 15l-5-5L5 21' },
+  env: { c: '#a6e3a1', d: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z' },
+  yml: { c: '#f38ba8', d: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6' },
   yaml: { c: '#f38ba8', d: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6' },
 };
 
@@ -45,7 +45,7 @@ function FileIcon({ name }) {
 }
 
 export default function Sidebar({
-  files, activeFile, onFileSelect, onFileCreate, onFileDelete, onFileRename, onFolderCreate, section
+  files, activeFile, onFileSelect, onFileCreate, onFileDelete, onFileRename, onFolderCreate, section, children
 }) {
   const [newFileName, setNewFileName] = useState('');
   const [showNewFile, setShowNewFile] = useState(false);
@@ -94,7 +94,7 @@ export default function Sidebar({
         <div className="px-3 pb-2">
           <div className="relative">
             <Ico d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" size={13}
-                 className="absolute left-2 top-1/2 -translate-y-1/2 text-ide-textMuted" />
+              className="absolute left-2 top-1/2 -translate-y-1/2 text-ide-textMuted" />
             <input
               type="text"
               value={searchQuery}
@@ -118,15 +118,15 @@ export default function Sidebar({
             </div>
           )}
           {searchResults.map(([path]) => (
-              <button
-                key={path}
-                onClick={() => onFileSelect(path)}
-                className="w-full flex items-center gap-1.5 text-xs py-1 px-2 rounded-md hover:bg-ide-bg/50 text-ide-text truncate transition-colors"
-              >
-                <FileIcon name={path} />
-                <span className="truncate">{path}</span>
-              </button>
-            ))
+            <button
+              key={path}
+              onClick={() => onFileSelect(path)}
+              className="w-full flex items-center gap-1.5 text-xs py-1 px-2 rounded-md hover:bg-ide-bg/50 text-ide-text truncate transition-colors"
+            >
+              <FileIcon name={path} />
+              <span className="truncate">{path}</span>
+            </button>
+          ))
           }
         </div>
       </div>
@@ -140,7 +140,7 @@ export default function Sidebar({
         <div className="px-3 pb-2">
           <div className="relative">
             <Ico d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" size={13}
-                 className="absolute left-2 top-1/2 -translate-y-1/2 text-ide-textMuted" />
+              className="absolute left-2 top-1/2 -translate-y-1/2 text-ide-textMuted" />
             <input
               type="text"
               placeholder="Search extensions..."
@@ -154,7 +154,7 @@ export default function Sidebar({
           {MOCK_EXTENSIONS.map(ext => (
             <div key={ext.name} className="flex items-start gap-2.5 p-2 rounded-lg hover:bg-ide-bg/40 transition-colors">
               <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                   style={{ backgroundColor: ext.color + '20' }}>
+                style={{ backgroundColor: ext.color + '20' }}>
                 <Ico d={ext.icon} size={16} color={ext.color} />
               </div>
               <div className="min-w-0 flex-1">
@@ -175,6 +175,10 @@ export default function Sidebar({
         </div>
       </div>
     );
+  }
+
+  if (section === 'ai' || section === 'search') {
+    return <>{children}</>;
   }
 
   return (
@@ -273,9 +277,9 @@ function FileTreeNode({
                 style={{ paddingLeft: `${depth * 12 + 8}px` }}
               >
                 <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                     strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-                     className={`transition-transform shrink-0 text-ide-textMuted ${isExpanded ? 'rotate-90' : ''}`}>
-                  <path d="M9 18l6-6-6-6"/>
+                  strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+                  className={`transition-transform shrink-0 text-ide-textMuted ${isExpanded ? 'rotate-90' : ''}`}>
+                  <path d="M9 18l6-6-6-6" />
                 </svg>
                 <Ico d={isExpanded
                   ? 'M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z'
@@ -346,7 +350,7 @@ function FileTreeNode({
               title="Delete"
             >
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                <path d="M18 6L6 18M6 6l12 12"/>
+                <path d="M18 6L6 18M6 6l12 12" />
               </svg>
             </button>
           </div>

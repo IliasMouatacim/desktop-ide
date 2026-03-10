@@ -3,29 +3,30 @@ import React, { useState, useRef, useEffect } from 'react';
 /* ── SVG micro-icons (16 × 16, stroke-based) ─────────────────────── */
 const Icon = ({ d, size = 16, className = '' }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-       strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <path d={d} />
   </svg>
 );
 
 const icons = {
-  eye:      'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 9a3 3 0 100 6 3 3 0 000-6z',
-  eyeOff:   'M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19M1 1l22 22M10.59 10.59a3 3 0 004.24 4.24',
+  eye: 'M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 9a3 3 0 100 6 3 3 0 000-6z',
+  eyeOff: 'M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19M1 1l22 22M10.59 10.59a3 3 0 004.24 4.24',
   terminal: 'M4 17l6-5-6-5M12 19h8',
-  play:     'M5 3l14 9-14 9V3z',
-  user:     'M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 3a4 4 0 100 8 4 4 0 000-8z',
-  logOut:   'M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9',
-  cloud:    'M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z',
-  file:     'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6',
-  folder:   'M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z',
-  save:     'M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2zM17 21v-8H7v8M7 3v5h8',
+  play: 'M5 3l14 9-14 9V3z',
+  user: 'M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 3a4 4 0 100 8 4 4 0 000-8z',
+  logOut: 'M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9',
+  cloud: 'M18 10h-1.26A8 8 0 109 20h9a5 5 0 000-10z',
+  file: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6',
+  folder: 'M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z',
+  save: 'M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2zM17 21v-8H7v8M7 3v5h8',
   download: 'M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3',
 };
 
 export default function Titlebar({
   user, onLogin, onLogout, onTogglePreview, onToggleTerminal, onRun,
   showPreview, showTerminal, projectName, onProjectNameChange,
-  onOpenFile, onOpenFolder, onSave, onDownload, onToggleSearch
+  onNewProject, onOpenFile, onOpenFolder, onSave, onDownload, onToggleSearch,
+  devServerPort, onDevServerPortChange
 }) {
   return (
     <div className="h-11 bg-ide-sidebar flex items-center px-3 border-b border-ide-border select-none shrink-0">
@@ -41,7 +42,7 @@ export default function Titlebar({
 
       {/* Menu items */}
       <div className="flex items-center gap-0.5 text-xs text-ide-textMuted">
-        <FileMenu onOpenFile={onOpenFile} onOpenFolder={onOpenFolder} onSave={onSave} onDownload={onDownload} />
+        <FileMenu onNewProject={onNewProject} onOpenFile={onOpenFile} onOpenFolder={onOpenFolder} onSave={onSave} onDownload={onDownload} />
         <DropdownMenu label="Edit" items={[
           { label: 'Undo', shortcut: 'Ctrl+Z', action: () => document.execCommand('undo') },
           { label: 'Redo', shortcut: 'Ctrl+Y', action: () => document.execCommand('redo') },
@@ -61,7 +62,7 @@ export default function Titlebar({
         <DropdownMenu label="Help" items={[
           { label: 'Keyboard Shortcuts', action: () => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'p', ctrlKey: true })) },
           { type: 'separator' },
-          { label: 'About Cloud IDE', action: () => {} },
+          { label: 'About Cloud IDE', action: () => { } },
         ]} />
       </div>
 
@@ -81,6 +82,17 @@ export default function Titlebar({
 
       {/* Controls */}
       <div className="flex items-center gap-0.5">
+        <div className="flex items-center mr-3 text-xs">
+          <span className="text-ide-textSubtle mr-1.5">Port:</span>
+          <input
+            type="text"
+            placeholder="e.g. 5174"
+            value={devServerPort}
+            onChange={(e) => onDevServerPortChange(e.target.value.replace(/[^0-9]/g, ''))}
+            className="w-16 bg-ide-bg rounded px-1.5 py-0.5 text-ide-text border border-ide-border focus:outline-none focus:border-ide-accent"
+            maxLength={5}
+          />
+        </div>
         <ToolButton
           label={showPreview ? 'Hide Preview' : 'Show Preview'}
           iconPath={showPreview ? icons.eye : icons.eyeOff}
@@ -136,7 +148,7 @@ export default function Titlebar({
 }
 
 /* ── File menu with dropdown ──────────────────────────────────────── */
-function FileMenu({ onOpenFile, onOpenFolder, onSave, onDownload }) {
+function FileMenu({ onNewProject, onOpenFile, onOpenFolder, onSave, onDownload }) {
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
 
@@ -150,6 +162,8 @@ function FileMenu({ onOpenFile, onOpenFolder, onSave, onDownload }) {
   }, [open]);
 
   const items = [
+    { label: 'New Project', icon: icons.file, shortcut: 'Ctrl+N', action: onNewProject },
+    { type: 'separator' },
     { label: 'Open File…', icon: icons.file, shortcut: 'Ctrl+O', action: onOpenFile },
     { label: 'Open Folder…', icon: icons.folder, shortcut: 'Ctrl+Shift+O', action: onOpenFolder },
     { type: 'separator' },
@@ -251,11 +265,10 @@ function ToolButton({ label, iconPath, active, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`p-1.5 rounded-md transition-all ${
-        active
+      className={`p-1.5 rounded-md transition-all ${active
           ? 'text-ide-accent bg-ide-accent/10 shadow-[inset_0_0_0_1px_rgba(137,180,250,0.15)]'
           : 'text-ide-textMuted hover:text-ide-text hover:bg-ide-bg/40'
-      }`}
+        }`}
       title={label}
     >
       <Icon d={iconPath} size={15} />

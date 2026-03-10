@@ -7,6 +7,7 @@ const { WebSocketServer } = require('ws');
 const authRoutes = require('./routes/auth');
 const projectRoutes = require('./routes/projects');
 const fileRoutes = require('./routes/files');
+const aiRoutes = require('./routes/ai');
 const terminalManager = require('./services/terminal');
 const collaborationManager = require('./services/collaboration');
 
@@ -21,6 +22,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/files', fileRoutes);
+app.use('/api/ai', aiRoutes);
 
 // Health check
 app.get('/api/health', (_req, res) => {

@@ -12,6 +12,7 @@ import StatusBar from './components/StatusBar';
 import WelcomeTab from './components/WelcomeTab';
 import QuickOpen from './components/QuickOpen';
 import ErrorBoundary from './components/ErrorBoundary';
+import AIPanel from './components/AIPanel';
 import { useFileSystem } from './hooks/useFileSystem';
 import { useAuth } from './hooks/useAuth';
 
@@ -21,7 +22,7 @@ export default function App() {
   const [showPreview, setShowPreview] = useState(true);
   const [showTerminal, setShowTerminal] = useState(true);
   const [showGit, setShowGit] = useState(false);
-  const [sidebarSection, setSidebarSection] = useState('files'); // files | search | git | extensions
+  const [sidebarSection, setSidebarSection] = useState('files'); // files | search | git | extensions | ai
   const [showQuickOpen, setShowQuickOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
 
@@ -143,7 +144,7 @@ export default function App() {
     try {
       // Try using JSZip-like approach with Blob
       const { default: JSZip } = await import('https://cdn.jsdelivr.net/npm/jszip@3.10.1/+esm').catch(() => ({ default: null }));
-      
+
       if (JSZip) {
         const zip = new JSZip();
         for (const [path, content] of entries) {
@@ -302,85 +303,99 @@ export default function App() {
 
       {/* Main content */}
       <ErrorBoundary>
-      <div className="flex-1 flex overflow-hidden">
-        {/* Activity Bar */}
-        <ActivityBar
-          section={sidebarSection}
-          onSectionChange={setSidebarSection}
-          onToggleGit={() => setShowGit(g => !g)}
-        />
-
-        <PanelGroup direction="horizontal">
-          {/* Sidebar */}
-          <Panel defaultSize={18} minSize={12} maxSize={35}>
-            <Sidebar
-              files={fs.files}
-              activeFile={fs.activeFile}
-              onFileSelect={fs.openFile}
-              onFileCreate={fs.createFile}
-              onFileDelete={fs.deleteFile}
-              onFileRename={fs.renameFile}
-              onFolderCreate={fs.createFolder}
-              section={sidebarSection}
-            />
-          </Panel>
-          <PanelResizeHandle />
-
-          {/* Editor + Terminal */}
-          <Panel defaultSize={showPreview ? 50 : 82} minSize={30}>
-            <PanelGroup direction="vertical">
-              <Panel defaultSize={showTerminal ? 70 : 100} minSize={30}>
-                <div className="h-full flex flex-col">
-                  <EditorTabs
-                    openFiles={fs.openFiles}
-                    activeFile={fs.activeFile}
-                    onTabSelect={fs.openFile}
-                    onTabClose={fs.closeFile}
-                    modifiedFiles={fs.modifiedFiles}
-                  />
-                  {fs.activeFile ? (
-                    <CodeEditor
-                      file={fs.activeFile}
-                      content={fs.getFileContent(fs.activeFile)}
-                      onChange={(content) => fs.updateFile(fs.activeFile, content)}
-                      onSave={() => fs.saveFile(fs.activeFile)}
-                      onCursorChange={fs.setCursorPosition}
-                    />
-                  ) : (
-                    <WelcomeTab onNewProject={fs.loadTemplate} />
-                  )}
-                </div>
-              </Panel>
-              {showTerminal && (
-                <>
-                  <PanelResizeHandle />
-                  <Panel defaultSize={30} minSize={10} maxSize={60}>
-                    <Terminal />
-                  </Panel>
-                </>
-              )}
-            </PanelGroup>
-          </Panel>
-
-          {/* Live Preview */}
-          {showPreview && (
-            <>
-              <PanelResizeHandle />
-              <Panel defaultSize={32} minSize={15}>
-                <LivePreview files={fs.files} />
-              </Panel>
-            </>
-          )}
-        </PanelGroup>
-
-        {/* Git panel overlay */}
-        {showGit && (
-          <GitPanel
-            files={fs.files}
-            onClose={() => setShowGit(false)}
+        <div className="flex-1 flex overflow-hidden">
+          {/* Activity Bar */}
+          <ActivityBar
+            section={sidebarSection}
+            onSectionChange={setSidebarSection}
+            onToggleGit={() => setShowGit(g => !g)}
           />
-        )}
-      </div>
+
+          <PanelGroup direction="horizontal">
+            {/* Sidebar */}
+            <Panel defaultSize={18} minSize={12} maxSize={35}>
+              <Sidebar
+                files={fs.files}
+                activeFile={fs.activeFile}
+                onFileSelect={fs.openFile}
+                onFileCreate={fs.createFile}
+                onFileDelete={fs.deleteFile}
+                onFileRename={fs.renameFile}
+                onFolderCreate={fs.createFolder}
+                section={sidebarSection}
+              >
+                {sidebarSection === 'search' && (
+                  <div className="p-4 text-ide-textMuted text-sm">
+                    <h3 className="text-xs font-semibold text-ide-text mb-3 uppercase tracking-widest">Search</h3>
+                    <p>Search functionality coming soon...</p>
+                  </div>
+                )}
+
+                {sidebarSection === 'ai' && (
+                  <AIPanel
+                    activeFile={fs.activeFile}
+                    activeFileContent={fs.activeFile ? fs.files[fs.activeFile] : null}
+                  />
+                )}
+              </Sidebar>
+            </Panel>
+            <PanelResizeHandle />
+
+            {/* Editor + Terminal */}
+            <Panel defaultSize={showPreview ? 50 : 82} minSize={30}>
+              <PanelGroup direction="vertical">
+                <Panel defaultSize={showTerminal ? 70 : 100} minSize={30}>
+                  <div className="h-full flex flex-col">
+                    <EditorTabs
+                      openFiles={fs.openFiles}
+                      activeFile={fs.activeFile}
+                      onTabSelect={fs.openFile}
+                      onTabClose={fs.closeFile}
+                      modifiedFiles={fs.modifiedFiles}
+                    />
+                    {fs.activeFile ? (
+                      <CodeEditor
+                        file={fs.activeFile}
+                        content={fs.getFileContent(fs.activeFile)}
+                        onChange={(content) => fs.updateFile(fs.activeFile, content)}
+                        onSave={() => fs.saveFile(fs.activeFile)}
+                        onCursorChange={fs.setCursorPosition}
+                      />
+                    ) : (
+                      <WelcomeTab onNewProject={fs.loadTemplate} />
+                    )}
+                  </div>
+                </Panel>
+                {showTerminal && (
+                  <>
+                    <PanelResizeHandle />
+                    <Panel defaultSize={30} minSize={10} maxSize={60}>
+                      <Terminal />
+                    </Panel>
+                  </>
+                )}
+              </PanelGroup>
+            </Panel>
+
+            {/* Live Preview */}
+            {showPreview && (
+              <>
+                <PanelResizeHandle />
+                <Panel defaultSize={32} minSize={15}>
+                  <LivePreview files={fs.files} />
+                </Panel>
+              </>
+            )}
+          </PanelGroup>
+
+          {/* Git panel overlay */}
+          {showGit && (
+            <GitPanel
+              files={fs.files}
+              onClose={() => setShowGit(false)}
+            />
+          )}
+        </div>
       </ErrorBoundary>
 
       {/* Status Bar */}
@@ -410,7 +425,7 @@ function ActivityBar({ section, onSectionChange, onToggleGit }) {
       label: 'Explorer',
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z"/>
+          <path d="M22 19a2 2 0 01-2 2H4a2 2 0 01-2-2V5a2 2 0 012-2h5l2 3h9a2 2 0 012 2z" />
         </svg>
       ),
     },
@@ -419,7 +434,7 @@ function ActivityBar({ section, onSectionChange, onToggleGit }) {
       label: 'Search',
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
         </svg>
       ),
     },
@@ -429,7 +444,7 @@ function ActivityBar({ section, onSectionChange, onToggleGit }) {
       onClick: onToggleGit,
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 012 2v7M6 9v12"/>
+          <circle cx="18" cy="18" r="3" /><circle cx="6" cy="6" r="3" /><path d="M13 6h3a2 2 0 012 2v7M6 9v12" />
         </svg>
       ),
     },
@@ -438,7 +453,18 @@ function ActivityBar({ section, onSectionChange, onToggleGit }) {
       label: 'Extensions',
       icon: (
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>
+          <rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" />
+        </svg>
+      ),
+    },
+    {
+      id: 'ai',
+      label: 'AI Assistant',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M12 2a3 3 0 00-3 3v7a3 3 0 006 0V5a3 3 0 00-3-3z" />
+          <path d="M19 10v2a7 7 0 01-14 0v-2" />
+          <line x1="12" y1="19" x2="12" y2="22" />
         </svg>
       ),
     },
