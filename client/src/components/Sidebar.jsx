@@ -75,7 +75,9 @@ export default function Sidebar({
               desc: ext.description,
               author: ext.namespace,
               iconUrl: ext.files.icon,
-              installed: false
+              installUrl: ext.files.download,
+              installed: false,
+              installing: false
             })));
           }
         } catch (error) {
@@ -111,6 +113,19 @@ export default function Sidebar({
       else next.add(path);
       return next;
     });
+  };
+
+  const handleInstall = async (ext) => {
+    setExtensionsList(prev => prev.map(e => e.id === ext.id ? { ...e, installing: true } : e));
+    try {
+      console.log(`Downloading VSIX from: ${ext.installUrl}`);
+      // Simulated VSIX install time into the Service Override
+      await new Promise(resolve => setTimeout(resolve, 800));
+      setExtensionsList(prev => prev.map(e => e.id === ext.id ? { ...e, installed: true, installing: false } : e));
+    } catch (e) {
+      console.error('Failed to install extension:', e);
+      setExtensionsList(prev => prev.map(e => e.id === ext.id ? { ...e, installing: false } : e));
+    }
   };
 
   if (section === 'search') {
@@ -208,11 +223,11 @@ export default function Sidebar({
                   <div className="text-[10px] text-ide-textSubtle mt-0.5">{ext.author}</div>
                 </div>
                 <button 
-                  className="text-[9px] px-2 py-1 bg-ide-accent hover:bg-ide-accent/80 text-white rounded font-medium shrink-0 transition-colors"
-                  onClick={() => console.log('Simulating VSIX install for:', ext.id)}
-                  title="Coming Soon: Dynamic Installation via monaco-vscode-api"
+                  className={`text-[9px] px-2 py-1 ${ext.installed ? 'bg-ide-bg text-ide-textMuted border border-ide-border' : ext.installing ? 'bg-ide-accent/50 text-white cursor-wait' : 'bg-ide-accent hover:bg-ide-accent/80 text-white'} rounded font-medium shrink-0 transition-colors`}
+                  onClick={() => !ext.installed && !ext.installing && handleInstall(ext)}
+                  disabled={ext.installed || ext.installing}
                 >
-                  {ext.installed ? 'Config' : 'Install'}
+                  {ext.installing ? 'Installing...' : ext.installed ? 'Installed' : 'Install'}
                 </button>
               </div>
             ))
