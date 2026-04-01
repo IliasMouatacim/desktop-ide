@@ -170,7 +170,7 @@ export default function Sidebar({
         </div>
         <div className="p-3 border-t border-ide-border">
           <p className="text-[10px] text-ide-textSubtle text-center">
-            Extension marketplace coming soon
+            Browse extensions on the <a href="https://marketplace.visualstudio.com/vscode" target="_blank" rel="noopener noreferrer" className="text-ide-accent hover:underline">VS Code Marketplace</a>
           </p>
         </div>
       </div>
