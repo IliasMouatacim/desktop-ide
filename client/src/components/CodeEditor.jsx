@@ -1,146 +1,100 @@
-import React, { useRef, useCallback } from 'react';
-import Editor from '@monaco-editor/react';
+import React, { useEffect, useRef, useCallback } from 'react';
+import * as monaco from 'monaco-editor';
+import { initialize } from 'vscode/services';
+import getEditorServiceOverride from '@codingame/monaco-vscode-editor-service-override';
 
 const LANGUAGE_MAP = {
-  js: 'javascript',
-  jsx: 'javascript',
-  ts: 'typescript',
-  tsx: 'typescript',
-  py: 'python',
-  rb: 'ruby',
-  java: 'java',
-  cpp: 'cpp',
-  c: 'c',
-  cs: 'csharp',
-  go: 'go',
-  rs: 'rust',
-  php: 'php',
-  html: 'html',
-  htm: 'html',
-  css: 'css',
-  scss: 'scss',
-  less: 'less',
-  json: 'json',
-  md: 'markdown',
-  yml: 'yaml',
-  yaml: 'yaml',
-  xml: 'xml',
-  sql: 'sql',
-  sh: 'shell',
-  bash: 'shell',
-  toml: 'ini',
-  env: 'ini',
-  txt: 'plaintext',
-  gitkeep: 'plaintext',
+  js: 'javascript', jsx: 'javascript', ts: 'typescript', tsx: 'typescript',
+  py: 'python', rb: 'ruby', java: 'java', cpp: 'cpp', c: 'c', cs: 'csharp',
+  go: 'go', rs: 'rust', php: 'php', html: 'html', htm: 'html', css: 'css',
+  scss: 'scss', less: 'less', json: 'json', md: 'markdown', yml: 'yaml',
+  yaml: 'yaml', xml: 'xml', sql: 'sql', sh: 'shell', bash: 'shell',
+  toml: 'ini', env: 'ini', txt: 'plaintext'
 };
 
 function getLanguage(filePath) {
-  const ext = filePath.split('.').pop().toLowerCase();
+  const ext = filePath?.split('.').pop().toLowerCase() || '';
   return LANGUAGE_MAP[ext] || 'plaintext';
 }
 
+let isInitialized = false;
+
 export default function CodeEditor({ file, content, onChange, onSave, onCursorChange }) {
+  const containerRef = useRef(null);
   const editorRef = useRef(null);
 
-  const handleMount = useCallback((editor, monaco) => {
-    editorRef.current = editor;
-
-    // Define the Catppuccin Mocha inspired theme
-    monaco.editor.defineTheme('cloud-ide-dark', {
-      base: 'vs-dark',
-      inherit: true,
-      rules: [
-        { token: 'comment', foreground: '6c7086', fontStyle: 'italic' },
-        { token: 'keyword', foreground: 'cba6f7' },
-        { token: 'string', foreground: 'a6e3a1' },
-        { token: 'number', foreground: 'fab387' },
-        { token: 'type', foreground: 'f9e2af' },
-        { token: 'variable', foreground: 'cdd6f4' },
-        { token: 'function', foreground: '89b4fa' },
-        { token: 'operator', foreground: '89dceb' },
-        { token: 'tag', foreground: 'f38ba8' },
-        { token: 'attribute.name', foreground: 'f9e2af' },
-        { token: 'attribute.value', foreground: 'a6e3a1' },
-        { token: 'delimiter', foreground: '9399b2' },
-      ],
-      colors: {
-        'editor.background': '#1e1e2e',
-        'editor.foreground': '#cdd6f4',
-        'editor.lineHighlightBackground': '#313244',
-        'editor.selectionBackground': '#45475a',
-        'editor.inactiveSelectionBackground': '#31324480',
-        'editorCursor.foreground': '#f5e0dc',
-        'editorWhitespace.foreground': '#31324450',
-        'editorIndentGuide.background': '#31324480',
-        'editorIndentGuide.activeBackground': '#45475a',
-        'editorLineNumber.foreground': '#6c7086',
-        'editorLineNumber.activeForeground': '#cdd6f4',
-        'editor.selectionHighlightBackground': '#45475a40',
-        'editorBracketMatch.background': '#45475a50',
-        'editorBracketMatch.border': '#89b4fa50',
-        'editorWidget.background': '#181825',
-        'editorSuggestWidget.background': '#181825',
-        'editorSuggestWidget.border': '#313244',
-        'editorSuggestWidget.selectedBackground': '#313244',
-        'list.hoverBackground': '#313244',
-        'minimap.background': '#181825',
+  useEffect(() => {
+    async function setupMonaco() {
+      // 1. Initialize VS Code services once
+      if (!isInitialized) {
+        try {
+          await initialize({
+            ...getEditorServiceOverride(monaco.editor.IStandaloneCodeEditor)
+          });
+          isInitialized = true;
+          console.log('monaco-vscode-api initialized!');
+        } catch (e) {
+          console.error('MVA init error:', e);
+        }
       }
-    });
 
-    monaco.editor.setTheme('cloud-ide-dark');
-
-    // Ctrl+S / Cmd+S to save
-    editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
-      onSave?.();
-    });
-
-    // Track cursor position
-    editor.onDidChangeCursorPosition((e) => {
-      onCursorChange?.({ line: e.position.lineNumber, col: e.position.column });
-    });
-
-    editor.focus();
-  }, [onSave, onCursorChange]);
-
-  const handleChange = useCallback((value) => {
-    onChange?.(value || '');
-  }, [onChange]);
-
-  return (
-    <div className="flex-1 overflow-hidden">
-      <Editor
-        height="100%"
-        path={file}
-        language={getLanguage(file)}
-        value={content}
-        onChange={handleChange}
-        onMount={handleMount}
-        theme="cloud-ide-dark"
-        options={{
-          fontSize: 14,
+      // 2. Create the editor instance
+      if (containerRef.current && !editorRef.current) {
+        const editor = monaco.editor.create(containerRef.current, {
+          value: content || '',
+          language: getLanguage(file),
+          theme: 'vs-dark',
+          automaticLayout: true,
           fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-          fontLigatures: true,
-          minimap: { enabled: true, maxColumn: 80 },
-          scrollBeyondLastLine: false,
-          smoothScrolling: true,
-          cursorBlinking: 'smooth',
-          cursorSmoothCaretAnimation: 'on',
-          renderWhitespace: 'selection',
-          bracketPairColorization: { enabled: true },
-          guides: { bracketPairs: true, indentation: true },
-          autoClosingBrackets: 'always',
-          autoClosingQuotes: 'always',
-          formatOnPaste: true,
-          suggestOnTriggerCharacters: true,
+          fontSize: 14,
           tabSize: 2,
-          wordWrap: 'off',
-          padding: { top: 8 },
-          lineNumbers: 'on',
-          glyphMargin: false,
-          folding: true,
-          links: true,
-        }}
-      />
-    </div>
-  );
+          minimap: { enabled: true }
+        });
+
+        // 3. Attach event listeners
+        editor.onDidChangeModelContent(() => {
+          onChange?.(editor.getValue());
+        });
+
+        editor.onDidChangeCursorPosition((e) => {
+          onCursorChange?.({ line: e.position.lineNumber, col: e.position.column });
+        });
+
+        editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.KeyS, () => {
+          onSave?.();
+        });
+
+        editorRef.current = editor;
+      }
+    }
+
+    setupMonaco();
+
+    return () => {
+      // Clean up the editor on unmount
+      if (editorRef.current) {
+        editorRef.current.dispose();
+        editorRef.current = null;
+      }
+    };
+  }, []);
+
+  // Sync content updates from parent
+  useEffect(() => {
+    if (editorRef.current && content !== editorRef.current.getValue()) {
+      editorRef.current.setValue(content || '');
+    }
+  }, [content]);
+
+  // Sync file language updates
+  useEffect(() => {
+    if (editorRef.current && file) {
+      const model = editorRef.current.getModel();
+      if (model) {
+        monaco.editor.setModelLanguage(model, getLanguage(file));
+      }
+    }
+  }, [file]);
+
+  return <div ref={containerRef} className="w-full h-full" />;
 }
