@@ -1,15 +1,16 @@
-const { contextBridge: o, ipcRenderer: r } = require("electron");
-o.exposeInMainWorld("electronAPI", {
+"use strict";
+const { contextBridge, ipcRenderer } = require("electron");
+contextBridge.exposeInMainWorld("electronAPI", {
   // File System Operations
-  readDirectory: (e) => r.invoke("fs:readDirectory", e),
-  readFile: (e) => r.invoke("fs:readFile", e),
-  writeFile: (e, i) => r.invoke("fs:writeFile", e, i),
-  deleteFile: (e) => r.invoke("fs:deleteFile", e),
-  createDirectory: (e) => r.invoke("fs:createDirectory", e),
+  readDirectory: (dirPath) => ipcRenderer.invoke("fs:readDirectory", dirPath),
+  readFile: (filePath) => ipcRenderer.invoke("fs:readFile", filePath),
+  writeFile: (filePath, content) => ipcRenderer.invoke("fs:writeFile", filePath, content),
+  deleteFile: (filePath) => ipcRenderer.invoke("fs:deleteFile", filePath),
+  createDirectory: (dirPath) => ipcRenderer.invoke("fs:createDirectory", dirPath),
   // Native Dialogs
-  openFolder: () => r.invoke("dialog:openFolder"),
-  openFile: () => r.invoke("dialog:openFile"),
+  openFolder: () => ipcRenderer.invoke("dialog:openFolder"),
+  openFile: () => ipcRenderer.invoke("dialog:openFile"),
   // Platform Info
   platform: process.platform,
-  isElectron: !0
+  isElectron: true
 });

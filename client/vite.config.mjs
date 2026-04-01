@@ -8,14 +8,11 @@ export default defineConfig({
     react(),
     electron([
       {
-        // Main process entry point
         entry: 'electron/main.js',
       },
       {
-        // Preload scripts entry point
         entry: 'electron/preload.js',
         onstart(options) {
-          // Notify the renderer process to reload when preload scripts are rebuilt
           options.reload();
         },
       },

@@ -1,14 +1,16 @@
-const { app: s, BrowserWindow: c, ipcMain: i, dialog: d } = require("electron"), l = require("path"), a = require("fs");
-require("electron-squirrel-startup") && s.quit();
-let t;
-function u() {
-  t = new c({
+"use strict";
+const { app, BrowserWindow, ipcMain, dialog } = require("electron");
+const path = require("path");
+const fs = require("fs");
+let mainWindow;
+function createWindow() {
+  mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
     minWidth: 800,
     minHeight: 600,
     title: "Cloud IDE",
-    icon: l.join(__dirname, "../public/vite.svg"),
+    icon: path.join(__dirname, "../public/vite.svg"),
     backgroundColor: "#1e1e2e",
     titleBarStyle: "hidden",
     titleBarOverlay: {
@@ -17,70 +19,83 @@ function u() {
       height: 36
     },
     webPreferences: {
-      preload: l.join(__dirname, "preload.js"),
-      nodeIntegration: !1,
-      contextIsolation: !0,
-      sandbox: !1
+      preload: path.join(__dirname, "preload.js"),
+      nodeIntegration: false,
+      contextIsolation: true,
+      sandbox: false
     }
-  }), process.env.VITE_DEV_SERVER_URL ? (t.loadURL(process.env.VITE_DEV_SERVER_URL), t.webContents.openDevTools()) : t.loadFile(l.join(__dirname, "../dist/index.html")), t.on("closed", () => {
-    t = null;
+  });
+  if (process.env.VITE_DEV_SERVER_URL) {
+    mainWindow.loadURL(process.env.VITE_DEV_SERVER_URL);
+    mainWindow.webContents.openDevTools();
+  } else {
+    mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
+  }
+  mainWindow.on("closed", () => {
+    mainWindow = null;
   });
 }
-i.handle("fs:readDirectory", async (e, r) => {
+ipcMain.handle("fs:readDirectory", async (event, dirPath) => {
   try {
-    return a.readdirSync(r, { withFileTypes: !0 }).map((o) => ({
-      name: o.name,
-      isDirectory: o.isDirectory(),
-      path: l.join(r, o.name)
+    const entries = fs.readdirSync(dirPath, { withFileTypes: true });
+    return entries.map((entry) => ({
+      name: entry.name,
+      isDirectory: entry.isDirectory(),
+      path: path.join(dirPath, entry.name)
     }));
-  } catch (n) {
-    return { error: n.message };
+  } catch (err) {
+    return { error: err.message };
   }
 });
-i.handle("fs:readFile", async (e, r) => {
+ipcMain.handle("fs:readFile", async (event, filePath) => {
   try {
-    return a.readFileSync(r, "utf-8");
-  } catch (n) {
-    return { error: n.message };
+    return fs.readFileSync(filePath, "utf-8");
+  } catch (err) {
+    return { error: err.message };
   }
 });
-i.handle("fs:writeFile", async (e, r, n) => {
+ipcMain.handle("fs:writeFile", async (event, filePath, content) => {
   try {
-    return a.writeFileSync(r, n, "utf-8"), { success: !0 };
-  } catch (o) {
-    return { error: o.message };
+    fs.writeFileSync(filePath, content, "utf-8");
+    return { success: true };
+  } catch (err) {
+    return { error: err.message };
   }
 });
-i.handle("fs:deleteFile", async (e, r) => {
+ipcMain.handle("fs:deleteFile", async (event, filePath) => {
   try {
-    return a.unlinkSync(r), { success: !0 };
-  } catch (n) {
-    return { error: n.message };
+    fs.unlinkSync(filePath);
+    return { success: true };
+  } catch (err) {
+    return { error: err.message };
   }
 });
-i.handle("fs:createDirectory", async (e, r) => {
+ipcMain.handle("fs:createDirectory", async (event, dirPath) => {
   try {
-    return a.mkdirSync(r, { recursive: !0 }), { success: !0 };
-  } catch (n) {
-    return { error: n.message };
+    fs.mkdirSync(dirPath, { recursive: true });
+    return { success: true };
+  } catch (err) {
+    return { error: err.message };
   }
 });
-i.handle("dialog:openFolder", async () => {
-  const e = await d.showOpenDialog(t, {
+ipcMain.handle("dialog:openFolder", async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
     properties: ["openDirectory"]
   });
-  return e.canceled ? null : e.filePaths[0];
+  if (result.canceled) return null;
+  return result.filePaths[0];
 });
-i.handle("dialog:openFile", async () => {
-  const e = await d.showOpenDialog(t, {
+ipcMain.handle("dialog:openFile", async () => {
+  const result = await dialog.showOpenDialog(mainWindow, {
     properties: ["openFile"]
   });
-  return e.canceled ? null : e.filePaths[0];
+  if (result.canceled) return null;
+  return result.filePaths[0];
 });
-s.whenReady().then(u);
-s.on("window-all-closed", () => {
-  process.platform !== "darwin" && s.quit();
+app.whenReady().then(createWindow);
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") app.quit();
 });
-s.on("activate", () => {
-  c.getAllWindows().length === 0 && u();
+app.on("activate", () => {
+  if (BrowserWindow.getAllWindows().length === 0) createWindow();
 });
