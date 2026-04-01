@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 
 /* ── SVG micro-icons ─────────────────────────────────────────────── */
 const Ico = ({ d, size = 14, color = 'currentColor', className = '' }) => (
@@ -31,11 +31,8 @@ const FILE_ICON_MAP = {
 const DEFAULT_FILE_ICON = { c: '#6c7086', d: 'M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6' };
 
 const MOCK_EXTENSIONS = [
-  { name: 'Prettier', desc: 'Code formatter', author: 'Prettier', color: '#56b6c2', icon: 'M4 4h16v16H4zM8 8h8M8 12h5M8 16h8', installed: true },
-  { name: 'ESLint', desc: 'JavaScript linter', author: 'Microsoft', color: '#8080f2', icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z', installed: true },
-  { name: 'GitLens', desc: 'Git supercharged', author: 'GitKraken', color: '#a6e3a1', icon: 'M18 18a3 3 0 100-6 3 3 0 006 0zM6 6a3 3 0 100 6 3 3 0 000-6zM13 6h3a2 2 0 012 2v7M6 9v12', installed: false },
-  { name: 'Tailwind CSS IntelliSense', desc: 'Tailwind autocomplete', author: 'Tailwind Labs', color: '#38bdf8', icon: 'M12 2C6.5 2 6 4.5 6 4.5V8h6v1H5s-3-.5-3 4 2.5 4 2.5 4H7v-3s-.2-2.5 2.5-2.5h5s2.3.1 2.3-2.3V4.5S17.5 2 12 2z', installed: false },
-  { name: 'Material Icon Theme', desc: 'File icons', author: 'Philipp Kief', color: '#f9e2af', icon: 'M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2zM8.5 10a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM21 15l-5-5L5 21', installed: false },
+  { id: 'prettier', name: 'Prettier', desc: 'Code formatter', author: 'Prettier', color: '#56b6c2', icon: 'M4 4h16v16H4zM8 8h8M8 12h5M8 16h8', installed: true },
+  { id: 'eslint', name: 'ESLint', desc: 'JavaScript linter', author: 'Microsoft', color: '#8080f2', icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z', installed: true }
 ];
 
 function FileIcon({ name }) {
@@ -54,7 +51,41 @@ export default function Sidebar({
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFolders, setExpandedFolders] = useState(new Set());
 
+  // Extension Gallery State
+  const [extensionQuery, setExtensionQuery] = useState('');
+  const [extensionsList, setExtensionsList] = useState(MOCK_EXTENSIONS);
+  const [isSearchingExt, setIsSearchingExt] = useState(false);
+
   const fileTree = useMemo(() => buildFileTree(files), [files]);
+
+  useEffect(() => {
+    if (section === 'extensions' && extensionQuery.trim()) {
+      setIsSearchingExt(true);
+      const timeout = setTimeout(async () => {
+        try {
+          const res = await fetch(`https://open-vsx.org/api/-/search?query=${encodeURIComponent(extensionQuery)}&size=20`);
+          const data = await res.json();
+          if (data && data.extensions) {
+            setExtensionsList(data.extensions.map(ext => ({
+              id: ext.namespace + '.' + ext.name,
+              name: ext.displayName || ext.name,
+              desc: ext.description,
+              author: ext.namespace,
+              iconUrl: ext.files.icon,
+              installed: false
+            })));
+          }
+        } catch (error) {
+          console.error("Failed to search extensions", error);
+        } finally {
+          setIsSearchingExt(false);
+        }
+      }, 600);
+      return () => clearTimeout(timeout);
+    } else if (section === 'extensions' && !extensionQuery.trim()) {
+      setExtensionsList(MOCK_EXTENSIONS);
+    }
+  }, [extensionQuery, section]);
 
   const handleCreateFile = (e) => {
     e.preventDefault();
@@ -143,34 +174,52 @@ export default function Sidebar({
               className="absolute left-2 top-1/2 -translate-y-1/2 text-ide-textMuted" />
             <input
               type="text"
-              placeholder="Search extensions..."
+              placeholder="Search Open VSX Gallery..."
+              value={extensionQuery}
+              onChange={(e) => setExtensionQuery(e.target.value)}
               className="w-full pl-7 pr-2 py-1.5 text-xs bg-ide-bg border border-ide-border rounded-md
                          text-ide-text placeholder-ide-textSubtle focus:outline-none focus:border-ide-accent transition-colors"
-              disabled
             />
           </div>
         </div>
         <div className="flex-1 overflow-y-auto px-2 space-y-1">
-          {MOCK_EXTENSIONS.map(ext => (
-            <div key={ext.name} className="flex items-start gap-2.5 p-2 rounded-lg hover:bg-ide-bg/40 transition-colors">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-                style={{ backgroundColor: ext.color + '20' }}>
-                <Ico d={ext.icon} size={16} color={ext.color} />
+          {isSearchingExt ? (
+            <div className="text-center text-xs text-ide-accent mt-4 animate-pulse">Searching...</div>
+          ) : extensionsList.length === 0 ? (
+            <div className="text-center text-xs text-ide-textMuted mt-4">No extensions found</div>
+          ) : (
+            extensionsList.map(ext => (
+              <div key={ext.id} className="flex items-start gap-2.5 p-2 rounded-lg hover:bg-ide-bg/40 transition-colors">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 overflow-hidden"
+                  style={{ backgroundColor: ext.color ? ext.color + '20' : '#313244' }}>
+                  {ext.iconUrl ? (
+                    <img src={ext.iconUrl} alt={ext.name} className="w-full h-full object-cover" 
+                         onError={(e) => { e.target.style.display = 'none'; }} />
+                  ) : ext.icon ? (
+                    <Ico d={ext.icon} size={16} color={ext.color || '#cdd6f4'} />
+                  ) : (
+                    <Ico d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" size={16} color="#cdd6f4" />
+                  )}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="text-xs font-medium text-ide-text truncate" title={ext.name}>{ext.name}</div>
+                  <div className="text-[10px] text-ide-textMuted truncate" title={ext.desc}>{ext.desc}</div>
+                  <div className="text-[10px] text-ide-textSubtle mt-0.5">{ext.author}</div>
+                </div>
+                <button 
+                  className="text-[9px] px-2 py-1 bg-ide-accent hover:bg-ide-accent/80 text-white rounded font-medium shrink-0 transition-colors"
+                  onClick={() => console.log('Simulating VSIX install for:', ext.id)}
+                  title="Coming Soon: Dynamic Installation via monaco-vscode-api"
+                >
+                  {ext.installed ? 'Config' : 'Install'}
+                </button>
               </div>
-              <div className="min-w-0 flex-1">
-                <div className="text-xs font-medium text-ide-text truncate">{ext.name}</div>
-                <div className="text-[10px] text-ide-textMuted truncate">{ext.desc}</div>
-                <div className="text-[10px] text-ide-textSubtle mt-0.5">{ext.author}</div>
-              </div>
-              <span className="text-[9px] px-1.5 py-[1px] bg-ide-accent/15 text-ide-accent rounded font-medium shrink-0">
-                {ext.installed ? 'Installed' : 'Install'}
-              </span>
-            </div>
-          ))}
+            ))
+          )}
         </div>
         <div className="p-3 border-t border-ide-border">
           <p className="text-[10px] text-ide-textSubtle text-center">
-            Browse extensions on the <a href="https://marketplace.visualstudio.com/vscode" target="_blank" rel="noopener noreferrer" className="text-ide-accent hover:underline">VS Code Marketplace</a>
+            Powered by <a href="https://open-vsx.org/" target="_blank" rel="noopener noreferrer" className="text-ide-accent hover:underline">Open VSX Registry</a>
           </p>
         </div>
       </div>
