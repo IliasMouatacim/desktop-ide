@@ -1,11 +1,12 @@
 {
-  "name": "cloud-ide-client",
+  "name": "desktop-ide",
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && electron-builder",
     "preview": "vite preview"
   },
   "dependencies": {
