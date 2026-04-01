@@ -51,19 +51,22 @@ export default function Sidebar({
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFolders, setExpandedFolders] = useState(new Set());
 
-  // Extension Gallery State
   const [extensionQuery, setExtensionQuery] = useState('');
-  const [extensionsList, setExtensionsList] = useState(MOCK_EXTENSIONS);
+  const [extensionsList, setExtensionsList] = useState([]);
   const [isSearchingExt, setIsSearchingExt] = useState(false);
 
   const fileTree = useMemo(() => buildFileTree(files), [files]);
 
   useEffect(() => {
-    if (section === 'extensions' && extensionQuery.trim()) {
+    if (section === 'extensions') {
       setIsSearchingExt(true);
       const timeout = setTimeout(async () => {
         try {
-          const res = await fetch(`https://open-vsx.org/api/-/search?query=${encodeURIComponent(extensionQuery)}&size=20`);
+          const url = extensionQuery.trim()
+            ? `https://open-vsx.org/api/-/search?query=${encodeURIComponent(extensionQuery)}&size=30`
+            : `https://open-vsx.org/api/-/search?sortBy=downloadCount&sortOrder=desc&size=30`;
+            
+          const res = await fetch(url);
           const data = await res.json();
           if (data && data.extensions) {
             setExtensionsList(data.extensions.map(ext => ({
@@ -76,14 +79,12 @@ export default function Sidebar({
             })));
           }
         } catch (error) {
-          console.error("Failed to search extensions", error);
+          console.error("Failed to fetch extensions", error);
         } finally {
           setIsSearchingExt(false);
         }
-      }, 600);
+      }, extensionQuery.trim() ? 600 : 0);
       return () => clearTimeout(timeout);
-    } else if (section === 'extensions' && !extensionQuery.trim()) {
-      setExtensionsList(MOCK_EXTENSIONS);
     }
   }, [extensionQuery, section]);
 
